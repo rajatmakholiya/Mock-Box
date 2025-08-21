@@ -14,6 +14,8 @@ export interface SavedTest {
   userAnswers: Record<number, string>;
   score: number;
   timestamp: number;
+  exam: string;
+  language: string;
 }
 
 export type QuizStatus = 'idle' | 'generating' | 'taking' | 'submitted' | 'reviewing';

@@ -6,26 +6,28 @@ import Spinner from "./Spinner";
 export const MainPage = ({ onShowHistory }: { onShowHistory: () => void; }) => {
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("");
-  const [branch, setBranch] = useState("");
+  const [subjects, setSubjects] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [error, setError] = useState("");
   const [quizStatus, setQuizStatus] = useState<QuizStatus>('idle');
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [score, setScore] = useState(0);
+  const [exam, setExam] = useState("");
+  const [language, setLanguage] = useState("");
 
   const handleGenerateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim()) return;
+    if (!topic.trim() || !exam.trim()) return;
     setQuizStatus('generating');
     setError("");
     setQuestions([]);
     setUserAnswers({});
     setScore(0);
     try {
-      const response = await fetch("http://localhost:5000/api/generate-questions", { 
-        method: "POST", headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ topic, difficulty, branch, additionalInfo }) 
+      const response = await fetch("http://localhost:5000/api/generate-questions", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, difficulty, subjects, additionalInfo, exam, language })
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -43,9 +45,11 @@ export const MainPage = ({ onShowHistory }: { onShowHistory: () => void; }) => {
     setQuestions([]);
     setTopic("");
     setDifficulty("");
-    setBranch("");
+    setSubjects("");
     setAdditionalInfo("");
     setError("");
+    setExam("");
+    setLanguage("");
   };
 
   const handleAnswerSelect = (questionId: number, option: string) => {
@@ -56,7 +60,7 @@ export const MainPage = ({ onShowHistory }: { onShowHistory: () => void; }) => {
     let correctAnswers = 0;
     questions.forEach(q => { if (userAnswers[q.id] === q.correct_answer) correctAnswers++; });
     setScore(correctAnswers);
-    addSavedTest({ topic, questions, userAnswers, score: correctAnswers, timestamp: Date.now() });
+    addSavedTest({ topic, questions, userAnswers, score: correctAnswers, timestamp: Date.now(), exam, language });
     setQuizStatus('submitted');
   };
 
@@ -72,6 +76,11 @@ export const MainPage = ({ onShowHistory }: { onShowHistory: () => void; }) => {
         <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur-lg dark:border dark:border-slate-700 p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
           {quizStatus === 'idle' || quizStatus === 'generating' ? (
             <form onSubmit={handleGenerateSubmit} className="space-y-4 animate-fade-in">
+              <div>
+                <label htmlFor="exam" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Exam*</label>
+                <input type="text" id="exam" placeholder="e.g., 'UPSC, JEE, CET, GMAT'" value={exam} onChange={(e) => setExam(e.target.value)} required
+                  className="mt-1 block w-full p-3 rounded-lg border-2 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
               <div>
                 <label htmlFor="topic" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Topic*</label>
                 <input type="text" id="topic" placeholder="e.g., 'History of Ancient Rome'" value={topic} onChange={(e) => setTopic(e.target.value)} required
@@ -89,17 +98,22 @@ export const MainPage = ({ onShowHistory }: { onShowHistory: () => void; }) => {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="branch" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Specific Branch</label>
-                  <input type="text" id="branch" placeholder="e.g., 'The Roman Republic'" value={branch} onChange={(e) => setBranch(e.target.value)}
+                  <label htmlFor="subjects" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Subjects</label>
+                  <input type="text" id="subjects" placeholder="e.g., 'The Roman Republic'" value={subjects} onChange={(e) => setSubjects(e.target.value)}
                     className="mt-1 block w-full p-3 rounded-lg border-2 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
+              </div>
+              <div>
+                <label htmlFor="language" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Language</label>
+                <input type="text" id="language" placeholder="e.g., 'Hindi, English, French, Marathi'" value={language} onChange={(e) => setLanguage(e.target.value)}
+                  className="mt-1 block w-full p-3 rounded-lg border-2 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
                 <label htmlFor="additionalInfo" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Additional Details</label>
                 <textarea id="additionalInfo" placeholder="e.g., 'Focus on the Punic Wars'" value={additionalInfo} onChange={(e) => setAdditionalInfo(e.target.value)} rows={2}
                   className="mt-1 block w-full p-3 rounded-lg border-2 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
-              <button type="submit" disabled={quizStatus === 'generating' || !topic.trim()} className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center">
+              <button type="submit" disabled={quizStatus === 'generating' || !topic.trim() || !exam.trim()} className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center">
                 {quizStatus === 'generating' ? <Spinner/> : "Generate Test"}
               </button>
             </form>

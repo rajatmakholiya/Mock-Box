@@ -20,15 +20,16 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.post("/api/generate-questions", async (req, res) => {
   try {
-    const { topic, difficulty, branch, additionalInfo } = req.body;
-    if (!topic) {
-      return res.status(400).json({ error: "Topic is required" });
+    const { topic, difficulty, subjects, additionalInfo, exam, language } = req.body;
+    if (!topic || !exam) {
+      return res.status(400).json({ error: "Exam and Topic are required" });
     }
 
     // --- Dynamically build the prompt ---
     let prompt = `
       You are a quiz generator. Your task is to generate 50 multiple-choice questions
-      on the main topic of "${topic}".
+      for a student preparing for the ${exam} exam.
+      The main topic of the quiz is "${topic}".
 
       You must respond with only a valid JSON array of objects. Do not include any text,
       markdown formatting, or code fences before or after the array.
@@ -39,11 +40,14 @@ app.post("/api/generate-questions", async (req, res) => {
     `;
 
     // Add optional details to the prompt if they exist
+    if (language) {
+      prompt += `\nThe questions should be in ${language}.`;
+    }
     if (difficulty) {
       prompt += `\nThe difficulty level for the questions should be ${difficulty}.`;
     }
-    if (branch) {
-      prompt += `\nFocus specifically on the sub-topic or branch: ${branch}.`;
+    if (subjects) {
+      prompt += `\nFocus specifically on the following subjects: ${subjects}.`;
     }
     if (additionalInfo) {
       prompt += `\nConsider the following additional details: ${additionalInfo}.`;
@@ -52,10 +56,19 @@ app.post("/api/generate-questions", async (req, res) => {
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    let text = response.text();
 
-    const questions = JSON.parse(text);
-    res.json({ questions });
+    // Find and extract the JSON array from the response text
+    const startIndex = text.indexOf('[');
+    const endIndex = text.lastIndexOf(']');
+    
+    if (startIndex !== -1 && endIndex !== -1) {
+      const jsonString = text.substring(startIndex, endIndex + 1);
+      const questions = JSON.parse(jsonString);
+      res.json({ questions });
+    } else {
+      throw new Error("Valid JSON not found in the response.");
+    }
 
   } catch (err) {
     console.error("--- Detailed Error ---");
