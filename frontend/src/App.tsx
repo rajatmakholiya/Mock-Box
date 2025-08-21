@@ -23,14 +23,6 @@ export default function App() {
   
   const handleContinue = () => { setView('main'); };
 
-  const PageToRender = () => {
-    switch(view) {
-      case 'history': return <PreviousTestsPage onBack={() => setView('main')} />;
-      case 'main': return <MainPage onShowHistory={() => setView('history')} />;
-      case 'login': default: return <LoginPage onContinue={handleContinue} />;
-    }
-  }
-
   return (
     <div className="min-h-screen bg-light-steel-blue dark:bg-deep-ocean text-slate-blue dark:text-powder-blue transition-colors duration-300">
       <button 
@@ -39,7 +31,11 @@ export default function App() {
       >
         {theme === "light" ? "🌙" : "☀️"}
       </button>
-      <PageToRender />
+      
+      {/* Conditionally render pages to preserve state */}
+      {view === 'login' && <LoginPage onContinue={handleContinue} />}
+      {view === 'main' && <MainPage onShowHistory={() => setView('history')} />}
+      {view === 'history' && <PreviousTestsPage onBack={() => setView('main')} />}
     </div>
   );
 }
