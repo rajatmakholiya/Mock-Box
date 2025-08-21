@@ -32,10 +32,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
+    <div className="min-h-screen bg-light-steel-blue dark:bg-deep-ocean text-slate-blue dark:text-powder-blue transition-colors duration-300">
       <button 
         onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} 
-        className="fixed bottom-4 right-4 z-20 p-3 rounded-full bg-white/70 dark:bg-slate-700/60 dark:backdrop-blur-lg dark:border dark:border-slate-600 shadow-lg text-2xl transition-transform hover:scale-110"
+        className="fixed bottom-4 right-4 z-20 p-3 rounded-full bg-white/70 dark:bg-slate-blue/60 dark:backdrop-blur-lg dark:border dark:border-steel-blue shadow-lg text-2xl transition-transform hover:scale-110"
       >
         {theme === "light" ? "🌙" : "☀️"}
       </button>
